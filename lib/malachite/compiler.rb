@@ -16,7 +16,17 @@ module Malachite
       if modified_go_files == []
         fail Malachite::BuildError, 'Nothing to build, there are no Go files in tmp'
       end
-      unless system('go', 'build', '-buildmode=c-shared', '-o', @compiled_file, *modified_go_files)
+      FileUtils.mkdir_p(Rails.root.join('tmp','src','main'))
+      Dir.foreach(Rails.root.join('tmp')) do |filename|
+        FileUtils.cp(Rails.root.join('tmp', filename), Rails.root.join('tmp','src','main').to_s) if filename.to_s.end_with? '.go'
+      end
+
+      Dir.chdir(Rails.root.join('tmp','src','main')) {
+        unless system({'GOPATH' => Rails.root.join('tmp').to_s}, 'go', 'get')
+          fail Malachite::BuildError, 'Unable to fetch dependencies, is Go 1.5+ installed?'
+        end
+      }
+      unless system({'GOPATH' => Rails.root.join('tmp').to_s}, 'go', 'build', '-buildmode=c-shared', '-o', @compiled_file, *modified_go_files)
         fail Malachite::BuildError, 'Unable to Build Shared Library, is Go 1.5+ installed?'
       end
       path_to_compiled_file

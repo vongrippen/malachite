@@ -9,6 +9,9 @@ module Malachite
     Dir.glob(Rails.root.join('tmp', '*.h')).each do |file|
       File.delete(file)
     end
+    FileUtils.rm_rf Rails.root.join('tmp', 'bin')
+    FileUtils.rm_rf Rails.root.join('tmp', 'pkg')
+    FileUtils.rm_rf Rails.root.join('tmp', 'src')
     Malachite::Compiler.new.compile if Malachite.precompile?
   end
   class MalachiteRailtie < Rails::Railtie
